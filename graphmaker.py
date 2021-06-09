@@ -50,65 +50,65 @@ def graphmaker(currencypairdata):
     return G;        
 
 #---------------------------------------------------------------#
-#findArbitrage goes through each node, and checks possible arbitrage routes
-
+#findArbitrage goes through each node, and checks possible arbitrage routes. O(n)*O(n^5) = O(n^6) worst case, practically less
 #---------------------------------------------------------------#         
 def findArbitrage(graph):
     #DFS algorithm
-    #clf gnf clf 1.0229
     transactionfee = 0.95; #change transactionfee here. Each currency conversion has same fee
     
     arbitragelist = [];
 
-    for n in graph.nodes: #find arbitrage for each ticker/node in graph
-        print('checking: '+str(n));
+    for startnode in graph.nodes: #find arbitrage for each ticker/node in graph
+        print('checking: '+str(startnode));
 
         for a in graph.nodes: #resets nodes in graph before finding arbitrageroute
-            graph.nodes[a]['color'] = "white";
-            graph.nodes[a]['distance'] = -1;
-            graph.nodes[a]['hasEdge'] = False;
+            graph.nodes[a]['color'] = "white"; #Colors are used to keep track of visited nodes, whites are unvisited, grays are visited and black is a starting node
+            graph.nodes[a]['distance'] = -1; #first distance set to nodes, can be used to limit detected arbitrages -> 1.001 value only detects cycles above 1.001
+            graph.nodes[a]['hasEdge'] = False; 
 
-        for neighbor in graph.in_edges(n): #used to check, if edge between starting node and a random node in graph exists O(n) (if graph is incomplete)
+        for neighbor in graph.in_edges(startnode): #used to check, if edge between starting node and a random node in graph exists O(n) in complete graphs
             graph.nodes[neighbor[0]]['hasEdge'] = True;
 
-        nodelist = [];
-        distance = 1; #starting distance
+        nodelist = []; # keeps track of path to current node
+        distance = 1; #starting distance, path from starting currency to itself is set to 1
          
-        graph.nodes[n]['color'] = "black";
-        findPath(graph,n,n,n,distance,transactionfee,nodelist,arbitragelist,0);
-
-        graph.nodes[n]['color'] = "white";
+        graph.nodes[startnode]['color'] = "black"; #Colours starting node black
+        findPath(graph,startnode,startnode,startnode,distance,transactionfee,nodelist,arbitragelist,0); 
+        #We have to check every node in a graph, and from that node check path (almost) to every other node -> O(n^n)
+        # In order to go around this time complexity, I assume that because of transaction costs, longer the path is, more costs eat from profits, leaving less practical arbitrage opportunities.
+        # Therefore if we limit the debt to maxinum 5 currencies, we can cut complexity to O(n^5) or O(n^d) where d = dept, which is significantly faster. This doesn't allow us to discover paths longer than 5 currencies
+        # To make search even faster, we can stop the search if profitability gets worse when dept gets increased. This only allows us to discover best arbitrage routes
 
     if (len(arbitragelist) == 0):
         print('no opportunities');
     else:
-        for arbitrages in arbitragelist:
+        for arbitrages in arbitragelist: #Go through found arbitrage paths
             print(arbitrages);
-
-#---------------------------------------------------------------#
-#function to
-#---------------------------------------------------------------#     
-def findPath(graph,startnode,node,previous, distance, transactionfee,nodelist,arbitragelist, dept):
     
-    if (dept > 5):
+#---------------------------------------------------------------#
+#findPath() iterates over nodes, worst case O(n^5)
+#---------------------------------------------------------------#     
+def findPath(graph,startnode,node,previous, distance, transactionfee,nodelist,arbitragelist,dept):
+    
+    if (dept > 5): # If dept is larger than 5, returns. This limits time complexity to O(n^5)
         return nodelist;
 
-    helplist = nodelist[:];
+    helplist = nodelist[:]; #Copies path into current node to editable list, which keeps track of path to next node
     helplist.append(node);
     
-    if (node != startnode):
+    if (node != startnode): #Skips first node
         graph.nodes[node]['color'] = "gray";
         
-        if (graph.nodes[node]['hasEdge']):
-            arbitragedistance = distance*graph[node][startnode]['weight']*transactionfee;
+        if (graph.nodes[node]['hasEdge']): #Checks that node has an edge to 
+            arbitragedistance = distance*graph[node][startnode]['weight']*transactionfee; #calculates current arbitrage profitability
             
-            if (graph.nodes[node]['distance'] < arbitragedistance):
+            if (graph.nodes[node]['distance'] < arbitragedistance): # If provitability is better than previous route to the node, sets new profitability
                 graph.nodes[node]['distance'] = arbitragedistance;
             
-            if (graph.nodes[previous]['distance'] > arbitragedistance):
+            if (graph.nodes[previous]['distance'] > graph.nodes[node]['distance']): #returns back to previous node, if profitability got worse
                 return;
-                
-            if (arbitragedistance > 1):
+                  
+            if (arbitragedistance > 1): # If pathlenght is over 1, arbitrage is profitable. Adds path to arbitragelist
                 arbitragepath = helplist[:];
                 arbitragepath.append(startnode);
                 arbitragepath.append(arbitragedistance);
@@ -121,18 +121,18 @@ def findPath(graph,startnode,node,previous, distance, transactionfee,nodelist,ar
             graph.nodes[node]['color'] = "white";
             return nodelist;
     
-    for nextnode in graph.neighbors(node):
+    for nextnode in graph.neighbors(node): # Goes through currency rates. In complete graph O(n)
         color = graph.nodes[nextnode]['color'];
        
         if (color == "gray" or
-        nextnode == startnode):
+        nextnode == startnode): #If node is already part of path, hops over the node
             continue; 
 
         else:
-            newdistance = distance*graph[node][nextnode]['weight']*transactionfee;
-            findPath(graph,startnode,nextnode,node,newdistance,transactionfee,helplist,arbitragelist, dept+1);
+            newdistance = distance*graph[node][nextnode]['weight']*transactionfee; #Calculates new distance at next node
+            findPath(graph,startnode,nextnode,node,newdistance,transactionfee,helplist,arbitragelist, dept+1); #Increases dept by one and starts over at next node
 
-    graph.nodes[node]['color'] = "white";
+    graph.nodes[node]['color'] = "white"; #Recolours node to white so it can be used again
             
     return nodelist;
 
