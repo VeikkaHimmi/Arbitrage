@@ -74,10 +74,13 @@ def findArbitrage(graph):
          
         graph.nodes[startnode]['color'] = "black"; #Colours starting node black
         findPath(graph,startnode,startnode,startnode,distance,transactionfee,nodelist,arbitragelist,0); 
-        #We have to check every node in a graph, and from that node check path (almost) to every other node -> O(n^n)
+
+        # We have to check every node in a graph, and from that node check path (almost) to every other node -> O(n^n)
         # In order to go around this time complexity, I assume that because of transaction costs, longer the path is, more costs eat from profits, leaving less practical arbitrage opportunities.
         # Therefore if we limit the debt to maxinum 5 currencies, we can cut complexity to O(n^5) or O(n^d) where d = dept, which is significantly faster. This doesn't allow us to discover paths longer than 5 currencies
-        # To make search even faster, we can stop the search if profitability gets worse when dept gets increased. This only allows us to discover best arbitrage routes
+        # To make search even faster, we can stop the search if profitability gets worse when dept gets increased. This only allows us to discover best arbitrage routes, but misses alot of opportunities
+        # for example if [USD,AMD,CLP,USD] gave 4% profit and later discovered [USD,EUR,CLP,USD] gave 3,9%, it wouldn't get included because weight of more efficient path is saved onto CLP node.
+        # If less currencies are included, O(n^5) becomes more reasonable. There is a lot of tradeoff
 
     if (len(arbitragelist) == 0):
         print('no opportunities');
