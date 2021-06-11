@@ -63,11 +63,14 @@ def findArbitrage(graph):
 
         for a in graph.nodes: #resets nodes in graph before finding arbitrageroute
             graph.nodes[a]['color'] = "white"; #Colors are used to keep track of visited nodes, whites are unvisited, grays are visited and black is a starting node
-            graph.nodes[a]['distance'] = -1; #first distance set to nodes, can be used to limit detected arbitrages -> 1.001 value only detects cycles above 1.001
+            graph.nodes[a]['distance'] = 0; #first distance set to nodes, can be used to limit detected arbitrages -> 1.001 value only detects cycles above 1.001
             graph.nodes[a]['hasEdge'] = False; 
 
         for neighbor in graph.in_edges(startnode): #used to check, if edge between starting node and a random node in graph exists O(n) in complete graphs
             graph.nodes[neighbor[0]]['hasEdge'] = True;
+
+        for neighbor in graph.out_edges(startnode):
+            graph.nodes[neighbor[1]]['distance'] = graph[startnode][neighbor[1]]['weight'];
 
         nodelist = []; # keeps track of path to current node
         distance = 1; #starting distance, path from starting currency to itself is set to 1
