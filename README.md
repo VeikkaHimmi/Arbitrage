@@ -27,6 +27,8 @@ path (EUR -> USD -> AOA):
 So now we go back to USD node, and check if we can find better path to VND. We trade 1 x 0,985 x 1,22 x 22945.04 x 0,985 = 27159,459, which is better than [EUR -> AOA -> VND] route. We update this distance to VND node. However, it is not enough to make a gain out of arbitrage so no real trades are executed 
 ![arbitrage_7](https://user-images.githubusercontent.com/78072757/121728138-890c1200-caf5-11eb-9011-71fef62ea12d.png)
 
+Obviously in this case simply checking [EUR -> X] first would have updated best distance to every other node, reducing algorithm running time. This is taken into account, and edge weights from starting node to other currencies are updated as first distances, before running Dept First Search onto the graph.
+
 
 # Next steps (not included yet)
 In reality, there may be many different market orders for a swap from first currency to the next. Someone might be willing to trade 1000 euros to dollars at a price of 1.22, and next order might be another 1000 euros at 1.19. As an simple example, if we want to exchange 2000 euros from EUR to USD, we might get better results for only executing the 1.22 trade and transfering last 1000 euros through other currency, like EUR -> AOA -> USD. 
