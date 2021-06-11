@@ -28,4 +28,4 @@ In reality, there may be many different market orders for a swap from first curr
 
 When we include order sizes, we are dealing with multigraphs and maxinum flow problem: What is the best route to flow money from EUR to USD with current market orders, when we account for order size and value?
 
-To test this out, crypto currency exchanges like Coinbase seem to provide free orderbook data on cryptocurrencies.
+To test this out, cryptocurrency exchanges like Coinbase seem to provide free orderbook data on cryptocurrencies. This could work as an good startingpoint.
